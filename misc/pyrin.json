@@ -1,0 +1,511 @@
+{
+  "version": 1,
+  "structures": [
+    {
+      "name": "ApiToken",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "updated",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthClaimQuickConnectCodeBody",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthFinishProvider",
+      "fields": [
+        {
+          "name": "token",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthFinishProviderBody",
+      "fields": [
+        {
+          "name": "requestId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "challenge",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthFinishQuickConnect",
+      "fields": [
+        {
+          "name": "token",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthFinishQuickConnectBody",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "challenge",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthGetProviderStatus",
+      "fields": [
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthGetProviderStatusBody",
+      "fields": [
+        {
+          "name": "requestId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "challenge",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthGetQuickConnectStatus",
+      "fields": [
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthGetQuickConnectStatusBody",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "challenge",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthInitiate",
+      "fields": [
+        {
+          "name": "requestId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "authUrl",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "challenge",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "expiresAt",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthInitiateBody",
+      "fields": [
+        {
+          "name": "providerId",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthProvider",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AuthQuickConnectInitiate",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "challenge",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "authUrl",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "expiresAt",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "CreateApiToken",
+      "fields": [
+        {
+          "name": "token",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "CreateApiTokenBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetApiTokens",
+      "fields": [
+        {
+          "name": "tokens",
+          "type": "[]ApiToken",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetAuthProviders",
+      "fields": [
+        {
+          "name": "providers",
+          "type": "[]AuthProvider",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetMe",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "picture",
+          "type": "Images",
+          "omitEmpty": false
+        },
+        {
+          "name": "quickPlaylist",
+          "type": "*string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetSystemInfo",
+      "fields": [
+        {
+          "name": "version",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetUser",
+      "fields": [
+        {
+          "name": "user",
+          "type": "UserData",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "fields": [
+        {
+          "name": "original",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "small",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "medium",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "large",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "UpdateMeBody",
+      "fields": [
+        {
+          "name": "displayName",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "UserData",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "picture",
+          "type": "Images",
+          "omitEmpty": false
+        },
+        {
+          "name": "created",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    }
+  ],
+  "endpoints": [
+    {
+      "type": "normal",
+      "name": "AuthCallback",
+      "method": "GET",
+      "path": "/api/v1/auth/providers/callback"
+    },
+    {
+      "type": "api",
+      "name": "AuthClaimQuickConnectCode",
+      "method": "POST",
+      "path": "/api/v1/auth/quick-connect/claim",
+      "body": "AuthClaimQuickConnectCodeBody"
+    },
+    {
+      "type": "api",
+      "name": "AuthFinishProvider",
+      "method": "POST",
+      "path": "/api/v1/auth/providers/finish",
+      "response": "AuthFinishProvider",
+      "body": "AuthFinishProviderBody"
+    },
+    {
+      "type": "api",
+      "name": "AuthFinishQuickConnect",
+      "method": "POST",
+      "path": "/api/v1/auth/quick-connect/finish",
+      "response": "AuthFinishQuickConnect",
+      "body": "AuthFinishQuickConnectBody"
+    },
+    {
+      "type": "api",
+      "name": "AuthGetProviderStatus",
+      "method": "POST",
+      "path": "/api/v1/auth/provider/status",
+      "response": "AuthGetProviderStatus",
+      "body": "AuthGetProviderStatusBody"
+    },
+    {
+      "type": "api",
+      "name": "AuthGetProviders",
+      "method": "GET",
+      "path": "/api/v1/auth/providers",
+      "response": "GetAuthProviders"
+    },
+    {
+      "type": "api",
+      "name": "AuthGetQuickConnectStatus",
+      "method": "POST",
+      "path": "/api/v1/auth/quick-connect/status",
+      "response": "AuthGetQuickConnectStatus",
+      "body": "AuthGetQuickConnectStatusBody"
+    },
+    {
+      "type": "api",
+      "name": "AuthProviderInitiate",
+      "method": "POST",
+      "path": "/api/v1/auth/providers/initiate",
+      "response": "AuthInitiate",
+      "body": "AuthInitiateBody"
+    },
+    {
+      "type": "api",
+      "name": "AuthQuickConnectInitiate",
+      "method": "POST",
+      "path": "/api/v1/auth/quick-connect/initiate",
+      "response": "AuthQuickConnectInitiate"
+    },
+    {
+      "type": "api",
+      "name": "CreateApiToken",
+      "method": "POST",
+      "path": "/api/v1/me/apitokens",
+      "response": "CreateApiToken",
+      "body": "CreateApiTokenBody"
+    },
+    {
+      "type": "api",
+      "name": "DeleteApiToken",
+      "method": "DELETE",
+      "path": "/api/v1/me/apitokens/:tokenId"
+    },
+    {
+      "type": "api",
+      "name": "GetApiTokens",
+      "method": "GET",
+      "path": "/api/v1/me/apitokens",
+      "response": "GetApiTokens"
+    },
+    {
+      "type": "api",
+      "name": "GetMe",
+      "method": "GET",
+      "path": "/api/v1/auth/me",
+      "response": "GetMe"
+    },
+    {
+      "type": "api",
+      "name": "GetSystemInfo",
+      "method": "GET",
+      "path": "/api/v1/system/info",
+      "response": "GetSystemInfo"
+    },
+    {
+      "type": "api",
+      "name": "GetUser",
+      "method": "GET",
+      "path": "/api/v1/users/:userId",
+      "response": "GetUser"
+    },
+    {
+      "type": "normal",
+      "name": "GetUserImage",
+      "method": "GET",
+      "path": "/files/users/images/:userId/:image"
+    },
+    {
+      "type": "api",
+      "name": "RunTask",
+      "method": "POST",
+      "path": "/api/v1/system/task/:taskName"
+    },
+    {
+      "type": "normal",
+      "name": "SseHandler",
+      "method": "GET",
+      "path": "/api/v1/system/sse"
+    },
+    {
+      "type": "api",
+      "name": "UpdateMe",
+      "method": "PATCH",
+      "path": "/api/v1/me",
+      "body": "UpdateMeBody"
+    }
+  ]
+}
