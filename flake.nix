@@ -27,7 +27,13 @@
           #   "-X github.com/nanoteck137/refinery.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           # ];
 
-          vendorHash = "";
+          vendorHash = "sha256-GBLUL8rs4rRysi7LKmlCVaceBkq11KnHwg4vwprzWTg=";
+
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+
+          postFixup = ''
+            wrapProgram $out/bin/refinery --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.nix pkgs.git pkgs.skopeo ]}
+          '';
         };
       in
       {
@@ -40,6 +46,8 @@
           buildInputs = with pkgs; [
             go
             gopls
+            skopeo
+            git
           ];
         };
       }
