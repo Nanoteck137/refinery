@@ -15,6 +15,8 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/kr/pretty"
+	"github.com/pelletier/go-toml/v2"
+	"github.com/spf13/cobra"
 )
 
 // Program Dependencies: git nix skopeo
@@ -41,7 +43,6 @@ type TagInfo struct {
 }
 
 func fetchTags(url string) ([]TagInfo, error) {
-
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -229,249 +230,330 @@ func randomDirName(name string) string {
 	return fmt.Sprintf("%s-%d-%06d", name, time.Now().Unix(), rand.IntN(1_000_000))
 }
 
-func main() {
-	// TODO(patrik): Config
-	base := "https://forgejo.nanoteck137.net"
-	owner := "nanoteck137"
-	repoName := "tunebook"
+type Config struct {
+	Owner    string `toml:"owner"`
+	RepoName string `toml:"repoName"`
 
-	// TODO(patrik): Config
-	registryImage := "forgejo.nanoteck137.net/nanoteck137/test"
+	RegistryImage    string `toml:"registryImage"`
+	RegistryUsername string `toml:"registryUsername"`
+	RegistryPassword string `toml:"registryPassword"`
+}
 
-	// TODO(patrik): Config
-	registryUsername := "nanoteck137"
-	registryPassword := "8ef57eb1f253d0c7c7eecd9c7e27ef4bcbe307ae"
+var rootCmd = &cobra.Command{
+	Use: "refinery",
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
+	},
+}
 
-	url := fmt.Sprintf("%s/api/v1/repos/%s/%s", base, owner, repoName)
-	repo, err := fetchRepo(url)
-	if err != nil {
-		log.Fatal(err)
-	}
+var newCmd = &cobra.Command{
+	Use: "new <NAME>",
+	Short: "Create new config",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
 
-	pretty.Println(repo)
+		conf := Config{
+			Owner:            "<REPO OWNER>",
+			RepoName:         "<REPO NAME>",
+			RegistryImage:    "<NAME OF THE FINAL IMAGE>",
+			RegistryUsername: "<USERNAME FOR REGISTRY AUTH>",
+			RegistryPassword: "<PASSWORD FOR REGISTRY AUTH>",
+		}
 
-	// Fetch tags/branches
-	url = fmt.Sprintf("%s/api/v1/repos/%s/%s/tags", base, owner, repoName)
-	tags, err := fetchTags(url)
-	if err != nil {
-		log.Fatal(err)
-	}
+		d, err := toml.Marshal(conf)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	pretty.Println(tags)
+		err = os.WriteFile(name + ".toml", d, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	},
+}
 
-	url = fmt.Sprintf("%s/api/v1/repos/%s/%s/branches", base, owner, repoName)
-	branches, err := fetchBranches(url)
-	if err != nil {
-		log.Fatal(err)
-	}
+var publishCmd = &cobra.Command{
+	Use: "publish <CONFIG>",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		configPath := args[0]
 
-	pretty.Println(branches)
+		d, err := os.ReadFile(configPath)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	// Select tag/branch
-	// TODO():
-	type Choice struct {
-		Type  string
-		Value string
-	}
+		var config Config
+		err = toml.Unmarshal(d, &config)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	var options []huh.Option[Choice]
+		// TODO(patrik): Config
+		base := "https://forgejo.nanoteck137.net"
 
-	for _, branch := range branches {
-		options = append(options, huh.NewOption("branch:"+branch.Name, Choice{
-			Type:  "branch",
-			Value: branch.Name,
-		}))
-	}
+		owner := config.Owner
+		repoName := config.RepoName
 
-	for _, tag := range tags {
-		options = append(options, huh.NewOption("tag:"+tag.Name, Choice{
-			Type:  "tag",
-			Value: tag.Name,
-		}))
-	}
+		// TODO(patrik): Config
+		registryImage := config.RegistryImage
 
-	var choice Choice
+		// TODO(patrik): Config
+		registryUsername := config.RegistryUsername
+		registryPassword := config.RegistryPassword
 
-	form := huh.NewForm(
-		huh.NewGroup(
-			huh.NewSelect[Choice]().
-				Options(options...).
-				Value(&choice),
-		),
-	)
+		url := fmt.Sprintf("%s/api/v1/repos/%s/%s", base, owner, repoName)
+		repo, err := fetchRepo(url)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	err = form.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+		pretty.Println(repo)
 
-	pretty.Println(choice)
+		// Fetch tags/branches
+		url = fmt.Sprintf("%s/api/v1/repos/%s/%s/tags", base, owner, repoName)
+		tags, err := fetchTags(url)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	// Clone repo
-	workDir := "./work"
+		pretty.Println(tags)
 
-	buildDir := path.Join(workDir, randomDirName(repo.Name))
-	fmt.Printf("buildDir: %v\n", buildDir)
-	defer func() {
-		os.RemoveAll(buildDir)
-	}()
+		url = fmt.Sprintf("%s/api/v1/repos/%s/%s/branches", base, owner, repoName)
+		branches, err := fetchBranches(url)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	runGit := func(dir string, params ...string) error {
-		cmd := exec.Command("git", params...)
-		cmd.Dir = dir
+		pretty.Println(branches)
 
-		env := os.Environ()
-		env = append(env,
-			"GIT_CONFIG_SYSTEM=/dev/null",
-			"GIT_CONFIG_GLOBAL=/dev/null",
-			"GIT_CONFIG_NOSYSTEM=1",
+		// Select tag/branch
+		// TODO():
+		type Choice struct {
+			Type  string
+			Value string
+		}
 
-			"GIT_TERMINAL_PROMPT=0",
-			"GIT_ASKPASS=/bin/false",
+		var options []huh.Option[Choice]
+
+		for _, branch := range branches {
+			options = append(options, huh.NewOption("branch:"+branch.Name, Choice{
+				Type:  "branch",
+				Value: branch.Name,
+			}))
+		}
+
+		for _, tag := range tags {
+			options = append(options, huh.NewOption("tag:"+tag.Name, Choice{
+				Type:  "tag",
+				Value: tag.Name,
+			}))
+		}
+
+		var choice Choice
+
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewSelect[Choice]().
+					Options(options...).
+					Value(&choice),
+			),
 		)
 
-		cmd.Env = env
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		err = cmd.Run()
+		err = form.Run()
 		if err != nil {
+			log.Fatal(err)
+		}
+
+		pretty.Println(choice)
+
+		// Clone repo
+		workDir := "./work"
+
+		buildDir := path.Join(workDir, randomDirName(repo.Name))
+		fmt.Printf("buildDir: %v\n", buildDir)
+		defer func() {
+			os.RemoveAll(buildDir)
+		}()
+
+		runGit := func(dir string, params ...string) error {
+			cmd := exec.Command("git", params...)
+			cmd.Dir = dir
+
+			env := os.Environ()
+			env = append(env,
+				"GIT_CONFIG_SYSTEM=/dev/null",
+				"GIT_CONFIG_GLOBAL=/dev/null",
+				"GIT_CONFIG_NOSYSTEM=1",
+
+				"GIT_TERMINAL_PROMPT=0",
+				"GIT_ASKPASS=/bin/false",
+			)
+
+			cmd.Env = env
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+
+		// git clone --depth 1 "$REPO_URL" "$BUILD_DIR"
+		err = runGit("", "clone", "--depth", "1", repo.CloneUrl, buildDir)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// if [ "$TYPE" = "tag" ]; then
+		//   git fetch --tags
+		//   git checkout "tags/$NAME"
+		// else
+		//   git checkout "$NAME"
+		// fi
+
+		tag := ""
+
+		switch choice.Type {
+		case "tag":
+			err = runGit(buildDir, "fetch", "--tags")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = runGit(buildDir, "checkout", "tags/"+choice.Value)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tag = choice.Value
+		case "branch":
+			err = runGit(buildDir, "fetch", "origin", choice.Value)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = runGit(buildDir, "checkout", "FETCH_HEAD")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tag = choice.Value
+		default:
+			panic("unknown choice type: " + choice.Type)
+		}
+
+		// Fetch version
+		// TODO(patrik)
+
+		nixBuild := func() (string, error) {
+			var res bytes.Buffer
+
+			cmd := exec.Command("nix", "build", "--no-link", "--print-out-paths", ".#docker")
+			cmd.Dir = buildDir
+			cmd.Stdout = &res
+			cmd.Stderr = os.Stderr
+
+			err = cmd.Run()
+			if err != nil {
+				return "", err
+			}
+
+			return strings.TrimSpace(res.String()), nil
+		}
+
+		// Build project
+		imagePath, err := nixBuild()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("imagePath: %v\n", imagePath)
+
+		// Push to registry
+
+		runSkopeo := func(params ...string) error {
+			p := []string{
+				"--insecure-policy",
+			}
+
+			p = append(p, params...)
+
+			cmd := exec.Command("skopeo", p...)
+			cmd.Dir = buildDir
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+
 			return err
 		}
 
-		return nil
-	}
+		// err = runSkopeo("inspect", "docker-archive:"+imagePath)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 
-	// git clone --depth 1 "$REPO_URL" "$BUILD_DIR"
-	err = runGit("", "clone", "--depth", "1", repo.CloneUrl, buildDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// if [ "$TYPE" = "tag" ]; then
-	//   git fetch --tags
-	//   git checkout "tags/$NAME"
-	// else
-	//   git checkout "$NAME"
-	// fi
-
-	tag := ""
-
-	switch choice.Type {
-	case "tag":
-		err = runGit(buildDir, "fetch", "--tags")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = runGit(buildDir, "checkout", "tags/"+choice.Value)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		tag = choice.Value
-	case "branch":
-		err = runGit(buildDir, "fetch", "origin", choice.Value)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = runGit(buildDir, "checkout", "FETCH_HEAD")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		tag = choice.Value
-	default:
-		panic("unknown choice type: " + choice.Type)
-	}
-
-	// Fetch version
-	// TODO(patrik)
-
-	// Build project
-	var res bytes.Buffer
-
-	cmd := exec.Command("nix", "build", "--no-link", "--print-out-paths", ".#docker")
-	cmd.Dir = buildDir
-	cmd.Stdout = &res
-	cmd.Stderr = os.Stderr
-
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	imagePath := strings.TrimSpace(res.String())
-	fmt.Printf("imagePath: %v\n", imagePath)
-
-	// Push to registry
-
-	runSkopeo := func(params ...string) error {
-		p := []string{
-			"--insecure-policy",
-		}
-
-		p = append(p, params...)
-
-		cmd = exec.Command("skopeo", p...)
-		cmd.Dir = buildDir
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		err = cmd.Run()
-		if err != nil {
-			return err
-		}
-
-		return err
-	}
-
-	// err = runSkopeo("inspect", "docker-archive:"+imagePath)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	targetImage := registryImage + ":" + tag
-	err = runSkopeo(
-		"copy",
-		"docker-archive:"+imagePath,
-		"docker://"+targetImage,
-		"--dest-username", registryUsername,
-		"--dest-password", registryPassword,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Tag latest in registry
-
-	tagLatest := false
-	form = huh.NewForm(
-		huh.NewGroup(
-			huh.NewConfirm().
-				Title("Tag Latest?").
-				Value(&tagLatest),
-		),
-	)
-
-	err = form.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if tagLatest {
-		dstImage := registryImage + ":latest"
-
+		targetImage := registryImage + ":" + tag
 		err = runSkopeo(
 			"copy",
+			"docker-archive:"+imagePath,
 			"docker://"+targetImage,
-			"docker://"+dstImage,
 			"--dest-username", registryUsername,
 			"--dest-password", registryPassword,
 		)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		// Tag latest in registry
+
+		tagLatest := false
+		form = huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title("Tag Latest?").
+					Value(&tagLatest),
+			),
+		)
+
+		err = form.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if tagLatest {
+			dstImage := registryImage + ":latest"
+
+			err = runSkopeo(
+				"copy",
+				"docker://"+targetImage,
+				"docker://"+dstImage,
+				"--dest-username", registryUsername,
+				"--dest-password", registryPassword,
+			)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(newCmd, publishCmd)
+}
+
+func main() {
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
 	}
+
 }
