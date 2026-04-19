@@ -239,40 +239,6 @@ type Config struct {
 	RegistryPassword string `toml:"registryPassword"`
 }
 
-var rootCmd = &cobra.Command{
-	Use: "refinery",
-	CompletionOptions: cobra.CompletionOptions{
-		DisableDefaultCmd: true,
-	},
-}
-
-var newCmd = &cobra.Command{
-	Use: "new <NAME>",
-	Short: "Create new config",
-	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		name := args[0]
-
-		conf := Config{
-			Owner:            "<REPO OWNER>",
-			RepoName:         "<REPO NAME>",
-			RegistryImage:    "<NAME OF THE FINAL IMAGE>",
-			RegistryUsername: "<USERNAME FOR REGISTRY AUTH>",
-			RegistryPassword: "<PASSWORD FOR REGISTRY AUTH>",
-		}
-
-		d, err := toml.Marshal(conf)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = os.WriteFile(name + ".toml", d, 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-	},
-}
-
 var publishCmd = &cobra.Command{
 	Use: "publish <CONFIG>",
 	Args: cobra.ExactArgs(1),
@@ -547,13 +513,5 @@ var publishCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(newCmd, publishCmd)
-}
-
-func main() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
-
+	rootCmd.AddCommand(publishCmd)
 }

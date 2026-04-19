@@ -21,11 +21,12 @@
           pname = "refinery";
           version = fullVersion;
           src = ./.;
+          subPackages = ["cmd/refinery"];
 
-          # ldflags = [
-          #   "-X github.com/nanoteck137/refinery.Version=${version}"
-          #   "-X github.com/nanoteck137/refinery.Commit=${self.dirtyRev or self.rev or "no-commit"}"
-          # ];
+          ldflags = [
+            "-X github.com/nanoteck137/refinery.Version=${version}"
+            "-X github.com/nanoteck137/refinery.Commit=${self.dirtyRev or self.rev or "no-commit"}"
+          ];
 
           vendorHash = "sha256-FvxdzUnvRMvGzMbRqCqg3a9ZRbknNev7eP5X34CCL8g=";
 
