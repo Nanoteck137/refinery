@@ -230,28 +230,31 @@ func randomDirName(name string) string {
 	return fmt.Sprintf("%s-%d-%06d", name, time.Now().Unix(), rand.IntN(1_000_000))
 }
 
-type Config struct {
-	Owner    string `toml:"owner"`
-	RepoName string `toml:"repoName"`
+type SpecRegistry struct {
+	Image    string `toml:"image"`
+	Username string `toml:"username"`
+	Password string `toml:"password"`
+}
 
-	RegistryImage    string `toml:"registryImage"`
-	RegistryUsername string `toml:"registryUsername"`
-	RegistryPassword string `toml:"registryPassword"`
+type Spec struct {
+	Repo string `toml:"repo"`
+
+	Registry SpecRegistry `toml:"registry"`
 }
 
 var publishCmd = &cobra.Command{
-	Use: "publish <CONFIG>",
+	Use:  "publish <SPEC>",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		configPath := args[0]
+		specPath := args[0]
 
-		d, err := os.ReadFile(configPath)
+		d, err := os.ReadFile(specPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		var config Config
-		err = toml.Unmarshal(d, &config)
+		var spec Spec
+		err = toml.Unmarshal(d, &spec)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -259,15 +262,19 @@ var publishCmd = &cobra.Command{
 		// TODO(patrik): Config
 		base := "https://forgejo.nanoteck137.net"
 
-		owner := config.Owner
-		repoName := config.RepoName
+		// spec.Repo = "nanoteck137/test/tell"
+		// spec.Repo = "nanoteck137"
+		owner, repoName, valid := strings.Cut(spec.Repo, "/")
 
-		// TODO(patrik): Config
-		registryImage := config.RegistryImage
+		if !valid {
+			// TODO(patrik): Better error
+			log.Fatal("invalid repo")
+		}
 
-		// TODO(patrik): Config
-		registryUsername := config.RegistryUsername
-		registryPassword := config.RegistryPassword
+		if strings.Contains(repoName, "/") {
+			// TODO(patrik): Better error
+			log.Fatal("contains more then one '/'")
+		}
 
 		url := fmt.Sprintf("%s/api/v1/repos/%s/%s", base, owner, repoName)
 		repo, err := fetchRepo(url)
@@ -335,7 +342,19 @@ var publishCmd = &cobra.Command{
 		pretty.Println(choice)
 
 		// Clone repo
-		workDir := "./work"
+
+		// TODO(patrik): Use in debug mode
+		// workDir := "./work"
+
+		workDir, err := os.MkdirTemp("", "refinery-*")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer func() {
+			os.RemoveAll(workDir)
+		}()
+
+		fmt.Printf("workDir: %v\n", workDir)
 
 		buildDir := path.Join(workDir, randomDirName(repo.Name))
 		fmt.Printf("buildDir: %v\n", buildDir)
@@ -467,13 +486,13 @@ var publishCmd = &cobra.Command{
 		// 	log.Fatal(err)
 		// }
 
-		targetImage := registryImage + ":" + tag
+		targetImage := spec.Registry.Image + ":" + tag
 		err = runSkopeo(
 			"copy",
 			"docker-archive:"+imagePath,
 			"docker://"+targetImage,
-			"--dest-username", registryUsername,
-			"--dest-password", registryPassword,
+			"--dest-username", spec.Registry.Username,
+			"--dest-password", spec.Registry.Password,
 		)
 		if err != nil {
 			log.Fatal(err)
@@ -496,14 +515,14 @@ var publishCmd = &cobra.Command{
 		}
 
 		if tagLatest {
-			dstImage := registryImage + ":latest"
+			dstImage := spec.Registry.Image + ":latest"
 
 			err = runSkopeo(
 				"copy",
 				"docker://"+targetImage,
 				"docker://"+dstImage,
-				"--dest-username", registryUsername,
-				"--dest-password", registryPassword,
+				"--dest-username", spec.Registry.Username,
+				"--dest-password", spec.Registry.Password,
 			)
 			if err != nil {
 				log.Fatal(err)
